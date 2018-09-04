@@ -17,7 +17,7 @@ Create a CSV manifest from a TAR file.
 optional arguments:
   -h, --help            show this help message and exit
   -l LICENSE, --license LICENSE
-                        The URL to the license for JAR file
+                        The relative path to the XML file containing the license mapping
   -o OUTPUT, --output OUTPUT
                         The path and name of the file to store the output
   -r REPOSITORY, --repository REPOSITORY
@@ -26,14 +26,14 @@ optional arguments:
 ```
 Running the program with command line arguments:
 ```
-./tar-manifest.py --tar /path/to/archive.tar.gz --license http://www.apache.org/licenses/LICENSE-2.0.txt --repository http://github.com/mbruzek/tar-manifest.git --output manifest.csv
+./tar-manifest.py --tar /path/to/archive.tar.gz --license path/to/license-report.xml --repository http://github.com/mbruzek/tar-manifest.git --output manifest.csv
 ```
 
 Running the program is run with no arguments, will prompt for the options:
 
 ```
 ./tar-manifest.py
-The name of the TAR file to process: 
+The name of the TAR file to process:
 ```
 
 ## License

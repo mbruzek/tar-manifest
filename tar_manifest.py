@@ -21,14 +21,16 @@ limitations under the License.
 
 import argparse
 import datetime
+import os
 import sys
 import tarfile
 import traceback
+import xml.etree.ElementTree as ET
 
 DESCRIPTION = 'Create a CSV manifest from a TAR file.'
 DEFAULT_OUTPUT = 'manifest.csv'
 HEADER = 'Name,Size,Modification date,Checksum,URL'
-LICENSE = 'The URL to the license for the one JAR file'
+LICENSE = 'The relative path to the XML file containing the license mapping'
 NEWLINE = '\n'
 OUTPUT = 'The path and name of the file to store the output'
 REPOSITORY = 'The URL to the source repository'
@@ -41,19 +43,23 @@ def create_manifest(tar_file, license, repository):
     manifest = ""
     # Open the TAR file for reading.
     with tarfile.open(tar_file, 'r:gz') as tar_reader:
+        # Extract the license report file to an in memory reader.
+        xml_reader = tar_reader.extractfile(license)
+        # Get the dictionary of jar file to license url.
+        jar_files = jar_to_license(xml_reader)
         # Write the column header.
         manifest += HEADER + NEWLINE
         # Loop through the files and directories in the TAR file.
         for tarinfo in tar_reader:
             if tarinfo.isfile():
                 name = tarinfo.name
+                basename = os.path.basename(name)
                 # Create a date from the last modified timestamp.
                 modified = datetime.datetime.fromtimestamp(tarinfo.mtime)
                 url = ""
-                if license and name.endswith('.jar'):
+                if basename.endswith('.jar') and basename in jar_files:
                     # Add a url link to the license for one JAR file.
-                    url = license
-                    license = None
+                    url = jar_files[basename]
                 elif repository:
                     # Add a url link to the repository for one other file type.
                     url = repository
@@ -65,6 +71,21 @@ def create_manifest(tar_file, license, repository):
                 manifest += NEWLINE
     return manifest
 
+def jar_to_license(license_report):
+    """Create a mapping from JAR file basename to license url based on the
+    license-report.xml file."""
+    # Parse the xml file.
+    tree = ET.parse(license_report)
+    licenses = tree.getroot()
+    jar_to_license = {}
+    for license in licenses:
+        url = license.attrib['url']
+        if url:
+            for dependency in license:
+                name = dependency.attrib['jar']
+                if name:
+                    jar_to_license[name] = url
+    return jar_to_license
 
 def handle_output(output_file, output):
     """Write the output to a file, or standard output."""
@@ -99,10 +120,10 @@ def command_line():
 
 def interactive():
     """Interactively prompt the user for the program options."""
-    tar = input('{}: '.format(TAR_FILE))
-    license = input('{}: '.format(LICENSE))
-    repository = input('{}: '.format(REPOSITORY))
-    out = input('{} [{}]: '.format(OUTPUT, DEFAULT_OUTPUT)) or DEFAULT_OUTPUT
+    tar = input('{0}: '.format(TAR_FILE))
+    license = input('{0}: '.format(LICENSE))
+    repository = input('{0}: '.format(REPOSITORY))
+    out = input('{0} [{1}]: '.format(OUTPUT, DEFAULT_OUTPUT)) or DEFAULT_OUTPUT
     manifest = create_manifest(tar, license, repository)
     handle_output(out, manifest)
 
