@@ -99,10 +99,10 @@ def command_line():
 
 def interactive():
     """Interactively prompt the user for the program options."""
-    tar = input('{}: '.format(TAR_FILE))
-    license = input('{}: '.format(LICENSE))
-    repository = input('{}: '.format(REPOSITORY))
-    out = input('{} [{}]: '.format(OUTPUT, DEFAULT_OUTPUT)) or DEFAULT_OUTPUT
+    tar = input('{0}: '.format(TAR_FILE))
+    license = input('{0}: '.format(LICENSE))
+    repository = input('{0}: '.format(REPOSITORY))
+    out = input('{0} [{1}]: '.format(OUTPUT, DEFAULT_OUTPUT)) or DEFAULT_OUTPUT
     manifest = create_manifest(tar, license, repository)
     handle_output(out, manifest)
 
